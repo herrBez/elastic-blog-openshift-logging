@@ -1,0 +1,65 @@
+kind: ClusterLogForwarder
+apiVersion: observability.openshift.io/v1
+metadata:
+  name: instance
+  namespace: openshift-logging
+spec:
+  managementState: Managed
+  outputs:
+    - elasticsearch:
+        authentication:
+          password:
+            key: password
+            secretName: elasticsearch-credentials
+          username:
+            key: username
+            secretName: elasticsearch-credentials
+        index: logs-openshift.app-default
+        url: '{YOUR_ELASTICSEARCH_URL}'
+        version: 8
+      name: app-logs-elasticsearch
+      type: elasticsearch
+    - elasticsearch:
+        authentication:
+          password:
+            key: password
+            secretName: elasticsearch-credentials
+          username:
+            key: username
+            secretName: elasticsearch-credentials
+        index: logs-openshift.audit-default
+        url: '{YOUR_ELASTICSEARCH_URL}'
+        version: 8
+      name: audit-logs
+      type: elasticsearch
+    - elasticsearch:
+        authentication:
+          password:
+            key: password
+            secretName: elasticsearch-credentials
+          username:
+            key: username
+            secretName: elasticsearch-credentials
+        index: logs-openshift.infra-default
+        url: '{YOUR_ELASTICSEARCH_URL}'
+        version: 8
+      name: infra-logs
+      type: elasticsearch
+  pipelines:
+    - inputRefs:
+        - application
+      name: app-logs-to-elasticsearch
+      outputRefs:
+        - app-logs-elasticsearch
+    - inputRefs:
+        - audit
+      name: audit-logs-to-elasticsearch
+      outputRefs:
+        - audit-logs
+    - inputRefs:
+        - infrastructure
+      name: infra-logs-to-elasticsearch
+      outputRefs:
+        - infra-logs
+  serviceAccount:
+    name: log-collector
