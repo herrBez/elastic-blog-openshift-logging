@@ -1,22 +1,35 @@
+apiVersion: observability.openshift.io/v1
 kind: ClusterLogForwarder
-apiVersion: logging.openshift.io/v1
 metadata:
-  name: instance
+  name: logging
   namespace: openshift-logging
+  annotations:
+    # The annnotation is required as per https://docs.redhat.com/en/documentation/red_hat_openshift_logging/6.4/html-single/configuring_logging/index#configuring-otlp-output_configuring-log-forwarding
+    observability.openshift.io/tech-preview-otlp-output: "enabled"
 spec:
+  inputs:
+    - type: application
+      name: application
+      application: {}
+    - type: infrastructure
+      name: infrastructure
+      infrastructure: {}
+    - type: audit
+      name: audit
+      audit: {}
+  managementState: Managed
   outputs:
-    - name: remote-elasticsearch
-      secret:
-        name: elasticsearch-password
-      type: elasticsearch
-      url: 'https://YOUR_ELASTICSEARCH_URL:443'
-      elasticsearch:
-        version: 8 # The default is version 6 with the _type field
+  - otlp:
+      url: 'http://${REPLACE_WITH_YOUR_OTLP_ENDPOINT}:4318/v1/logs'
+    type: otlp
+    name: otlp
   pipelines:
-    - inputRefs:
-        - application
-        - audit
-        # - infrastructure # Add this line if you need these logs
-      name: enable-default-log-store
-      outputRefs:
-        - remote-elasticsearch
+      - name: send-to-otlp
+        inputRefs:
+          - application    # openshift.log.type == "application"
+          - infrastructure # openshift.log.type == "infrastructure"
+          - audit          # openshift.log.type == "audit"
+        outputRefs:
+          - otlp
+  serviceAccount:
+    name: log-collector
