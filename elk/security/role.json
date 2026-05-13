@@ -5,22 +5,12 @@
   "indices": [
     {
       "names": [
-        "logs-*-*"
+        "logs-*-*",
+        "logs.*"
       ],
       "privileges": [
         "auto_configure",
         "create_doc"
-      ],
-      "allow_restricted_indices": false
-    },
-    {
-      "names": [
-        "app-write",
-        "audit-write",
-      ],
-      "privileges": [
-        "create_doc",
-        "read"
       ],
       "allow_restricted_indices": false
     }
